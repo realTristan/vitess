@@ -28,6 +28,10 @@ bun install
 npm install
 ```
 
+```bash
+npx prisma generate
+```
+
 #### Migrating prisma schema (create a new CockroachDB first)
 
 ```bash
