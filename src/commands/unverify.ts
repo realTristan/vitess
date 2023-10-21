@@ -23,14 +23,13 @@ export const UnverifyCommand: Command = {
     // If the user exists, then they have already been verified
     if (!userExists) {
       const embed: EmbedBuilder = invalidUserEmbed();
-      await ctx.reply({ embeds: [embed] });
-      return;
+      return await ctx.reply({ embeds: [embed] });
     }
 
-    // Delete the user
+    // Delete the user from the database
     await DATABASE.deleteUser(ctx.user.id);
 
-    // Send the user a direct message asking them to enter the generated code
+    // Send the success embed
     const embed: EmbedBuilder = unverifySuccessEmbed();
     await ctx.reply({ embeds: [embed] });
   },
@@ -40,8 +39,8 @@ export const UnverifyCommand: Command = {
  * Embed for entering an invalid user
  * @returns The embed
  */
-function invalidUserEmbed(): EmbedBuilder {
-  const embed = new EmbedBuilder()
+const invalidUserEmbed = (): EmbedBuilder =>
+  new EmbedBuilder()
     .setAuthor({
       name: "Vitess Verification",
       iconURL: EMBED_IMAGE,
@@ -49,21 +48,15 @@ function invalidUserEmbed(): EmbedBuilder {
     .setDescription("Invalid user")
     .setColor(EMBED_ERROR_COLOR);
 
-  return embed;
-}
-
 /**
  * Embed for successfully unverifying a user
  * @returns The embed
  */
-function unverifySuccessEmbed(): EmbedBuilder {
-  const embed = new EmbedBuilder()
+const unverifySuccessEmbed = (): EmbedBuilder =>
+  new EmbedBuilder()
     .setAuthor({
       name: "Vitess Verification",
       iconURL: EMBED_IMAGE,
     })
     .setDescription("Successfully unverified user")
     .setColor(EMBED_SUCCESS_COLOR);
-
-  return embed;
-}

@@ -126,6 +126,7 @@ export class Database {
     const userExists = await this.userExists(discordId);
     if (!userExists) {
       await this.createUser(discordId);
+      return;
     }
 
     throw new Error("Failed to create user");
@@ -161,6 +162,7 @@ export class Database {
     const userExists = await this.userExists(discordId);
     if (userExists) {
       await this.deleteUser(discordId);
+      return;
     }
 
     throw new Error("Failed to delete user");

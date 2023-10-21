@@ -7,8 +7,19 @@ import {
   EMBED_IMAGE,
   EMBED_NEUTRAL_COLOR,
 } from "../lib/constants";
+import { getGuildFromInteraction } from "../utils/getGuild";
 
-// Verified command
+/**
+ * Check if the user has admin permissions
+ * @param guildUser The guild user
+ * @returns True if the user has admin permissions
+ */
+const isAdmin = (guildUser: any): boolean =>
+  guildUser.permissions.has("Administrator");
+
+/**
+ * Verified command
+ */
 export const VerifiedCommand: Command = {
   name: "verified",
   data: new SlashCommandBuilder()
@@ -18,18 +29,17 @@ export const VerifiedCommand: Command = {
 
   handler: async (ctx: any) => {
     // Check if the user has admin permissions
-    const guild: Guild | undefined = await ctx.guild?.fetch();
+    const guild = await getGuildFromInteraction(ctx);
     if (!guild) {
       const embed: EmbedBuilder = errorEmbed();
-      await ctx.reply({ embeds: [embed] });
-      return;
+      return await ctx.reply({ embeds: [embed] });
     }
 
+    // Check if the user has admin permissions
     const guildUser = guild.members.cache.get(ctx.user.id);
     if (!guildUser || !isAdmin(guildUser)) {
       const embed: EmbedBuilder = invalidPermissionsEmbed();
-      await ctx.reply({ embeds: [embed] });
-      return;
+      return await ctx.reply({ embeds: [embed] });
     }
 
     // Get all verified users
@@ -43,20 +53,39 @@ export const VerifiedCommand: Command = {
 };
 
 /**
- * Check if the user has admin permissions
- * @param guildUser The guild user
- * @returns True if the user has admin permissions
+ * Generate the embed fields for the list of verified users
+ * @returns The embed fields
  */
-function isAdmin(guildUser: any): boolean {
-  return guildUser.permissions.has("Administrator");
-}
+const genVerifiedUsersEmbedFields = (guild: Guild, users: any) =>
+  users.map((user: any) => {
+    const member = guild.members.cache.get(user.discordId);
+    const userName = member ? member.user.username : "User";
+
+    return {
+      name: `${userName} (${user.id})`,
+      value: user.verifiedAt.toString(),
+    };
+  });
+
+/**
+ * Embed for the list of verified users
+ * @returns The embed
+ */
+const verifiedUsersEmbed = (guild: Guild, users: any) => {
+  const fields = genVerifiedUsersEmbedFields(guild, users);
+
+  return new EmbedBuilder()
+    .setTitle("Verified Users")
+    .setColor(EMBED_NEUTRAL_COLOR)
+    .addFields(fields);
+};
 
 /**
  * Embed for not having admin permissions
  * @returns The embed
  */
-function invalidPermissionsEmbed(): EmbedBuilder {
-  const embed = new EmbedBuilder()
+const invalidPermissionsEmbed = (): EmbedBuilder =>
+  new EmbedBuilder()
     .setAuthor({
       name: "Vitess Verification",
       iconURL: EMBED_IMAGE,
@@ -64,51 +93,15 @@ function invalidPermissionsEmbed(): EmbedBuilder {
     .setDescription("Invalid permissions")
     .setColor(EMBED_ERROR_COLOR);
 
-  return embed;
-}
-
-/**
- * Embed for the list of verified users
- * @returns The embed
- */
-async function verifiedUsersEmbed(guild: Guild, users: any) {
-  const fields: any[] = users.map((user: any) => {
-    const member = guild.members.cache.get(user.discordId);
-
-    if (!member) {
-      return {
-        name: `Unknown (${user.discordId})`,
-        value: user.verifiedAt.toString(),
-      };
-    }
-
-    const userName: string = member.nickname || member.user.username;
-    return {
-      name: `${userName} (${user.discordId})`,
-      value: user.verifiedAt.toString(),
-    };
-  });
-
-  const embed = new EmbedBuilder()
-    .setTitle("Verified Users")
-    .setColor(EMBED_NEUTRAL_COLOR)
-    .addFields(fields);
-
-  return embed;
-}
-
 /**
  * Embed for an error
  * @returns The embed
  */
-function errorEmbed(): EmbedBuilder {
-  const embed = new EmbedBuilder()
+const errorEmbed = (): EmbedBuilder =>
+  new EmbedBuilder()
     .setAuthor({
       name: "Vitess Verification",
       iconURL: EMBED_IMAGE,
     })
     .setDescription("An error occurred")
     .setColor(EMBED_ERROR_COLOR);
-
-  return embed;
-}

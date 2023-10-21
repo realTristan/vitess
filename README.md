@@ -18,36 +18,11 @@ DISCORD_TOKEN = "YOUR DISCORD TOKEN"
 
 ### Execute the following commands
 
-#### Install dependencies
-
 ```bash
-bun install
-```
-
-```bash
-npm install
-```
-
-```bash
-npx prisma generate
-```
-
-#### Migrating prisma schema (create a new CockroachDB first)
-
-```bash
-npx prisma migrate dev --name init --preview-feature
-```
-
-#### Run the redis server in a different terminal (using docker)
-
-```bash
-docker run -p 6379:6379 -it redis/redis-stack-server:latest
-```
-
-#### Run the index file (start everything)
-
-```bash
-bun run index.ts
+make install
+make migrate
+make redis
+make start
 ```
 
 # How to interact with the bot

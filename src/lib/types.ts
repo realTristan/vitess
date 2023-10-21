@@ -11,3 +11,8 @@ export type Command = {
   data: RESTPostAPIChatInputApplicationCommandsJSONBody | null;
   handler: (interaction: Interaction) => Promise<void>;
 };
+
+/**
+ * Type for a timeout
+ */
+export type Timeout = NodeJS.Timeout;

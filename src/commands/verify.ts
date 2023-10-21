@@ -1,27 +1,24 @@
 import { SlashCommandBuilder } from "@discordjs/builders";
-import { Command } from "../lib/types";
+import { Command, Timeout } from "../lib/types";
 import { DATABASE } from "../lib/database";
 import { sha256 } from "../lib/crypto";
-import { APIEmbedField, ChannelType, EmbedBuilder, Message } from "discord.js";
+import { ChannelType, EmbedBuilder, Message } from "discord.js";
 import {
   EMBED_ERROR_COLOR,
   EMBED_IMAGE,
   EMBED_NEUTRAL_COLOR,
   EMBED_SUCCESS_COLOR,
+  MAX_RESPONSES,
+  RESPONSE_WAIT_TIME_IN_MS,
+  TIME_UPDATE_INTERVAL_IN_MS,
 } from "../lib/constants";
-
-// Constants
-const MAX_RESPONSES: number = 1;
-const RESPONSE_WAIT_TIME_IN_MS: number = 10000;
-const TIME_UPDATE_INTERVAL_IN_MS: number = RESPONSE_WAIT_TIME_IN_MS / 10;
 
 /**
  * Function to generate a random code
  * @returns The code
  */
-async function genCode(): Promise<string> {
-  return sha256(Math.random().toString() + ":" + Date.now());
-}
+const genCode = async (): Promise<string> =>
+  sha256(Math.random().toString() + ":" + Date.now());
 
 // Verify command
 export const VerifyCommand: Command = {
@@ -38,8 +35,7 @@ export const VerifyCommand: Command = {
     // If the user exists, then they have already been verified
     if (userExists) {
       const embed: EmbedBuilder = alreadyVerifiedEmbed();
-      await ctx.reply({ embeds: [embed] });
-      return;
+      return await ctx.reply({ embeds: [embed] });
     }
 
     // Send the user a direct message asking them to enter the generated code
@@ -48,10 +44,11 @@ export const VerifyCommand: Command = {
     const embedMessage = await ctx.user.send({
       embeds: [verifyEmbed],
     });
+
     await ctx.reply("A code has been sent to your dms!");
 
     // Start updating the embed time left
-    const interval = await updateEmbedTime(verifyEmbed, embedMessage);
+    const interval = updateEmbedTimeInterval(verifyEmbed, embedMessage);
 
     // Response filter
     const response = await awaitResponse(ctx, code);
@@ -62,48 +59,57 @@ export const VerifyCommand: Command = {
     // If the response is null, then the user didn't respond
     if (!response) {
       const embed: EmbedBuilder = timeOutEmbed();
-      await ctx.user.send({ embeds: [embed] });
-      return;
+      return await ctx.user.send({ embeds: [embed] });
     }
 
     // If the code doesn't match, then the user entered the wrong code
     if (code !== response.content) {
       const embed: EmbedBuilder = wrongCodeEmbed();
-      await ctx.user.send({ embeds: [embed] });
-      return;
+      return await ctx.user.send({ embeds: [embed] });
     }
 
-    // Create the user
+    // Create the user in the database
     await DATABASE.createUser(ctx.user.id);
 
-    const succEmbed = successEmbed();
-    await ctx.user.send({ embeds: [succEmbed] });
+    // Send the success embed
+    const embed: EmbedBuilder = successEmbed();
+    await ctx.user.send({ embeds: [embed] });
   },
 };
 
 /**
  * Interval for updating the embed time
  * @param embed The embed
- * @param embedMessage The embed message
+ * @param msg The embed message
  * @returns The interval
  */
-async function updateEmbedTime(
-  embed: EmbedBuilder,
-  embedMessage: Message
-): Promise<NodeJS.Timeout> {
-  return setInterval(async () => {
-    const fields: APIEmbedField[] = embed.data.fields ?? [];
-    const value: string = fields[1].value;
-    const newTime: number = parseInt(value.split(" ")[0]) - 1;
+const updateEmbedTimeInterval = (embed: EmbedBuilder, msg: Message): Timeout =>
+  setInterval(
+    async () => await updateEmbedTimeField(embed, msg),
+    TIME_UPDATE_INTERVAL_IN_MS
+  );
 
-    // Update the embed
-    fields[1].value = `${newTime} seconds`;
+/**
+ * Update the embed time
+ * @param embed The embed
+ * @param msg The embed message
+ * @returns The interval
+ */
+const updateEmbedTimeField = async (embed: EmbedBuilder, msg: Message) => {
+  const fields = embed.data.fields;
+  if (!fields || !fields.length) return;
 
-    // Edit the embed
-    embed.setFields(fields);
-    await embedMessage.edit({ embeds: [embed] });
-  }, TIME_UPDATE_INTERVAL_IN_MS);
-}
+  const value = fields[1].value;
+  if (!value) return;
+
+  // Update the field with the new time
+  const time = parseInt(value.split(" ")[0]) - 1;
+  fields[1].value = `${time} seconds`;
+
+  // Edit the embed
+  embed.setFields(fields);
+  await msg.edit({ embeds: [embed] });
+};
 
 /**
  * Wait for the user to respond
@@ -111,30 +117,33 @@ async function updateEmbedTime(
  * @param embedMessage The embed message
  * @returns The response
  */
-async function awaitResponse(ctx: any, code: string) {
+const awaitResponse = async (ctx: any, code: string) => {
+  const channel = ctx.user.dmChannel;
+  if (!channel) return null;
+
   const filter = (m: Message) =>
     m.author.id === ctx.user.id &&
     m.channel.type === ChannelType.DM &&
     m.content.length === code.length;
 
-  const msg = await ctx.user.dmChannel
-    ?.awaitMessages({
-      filter,
-      max: MAX_RESPONSES,
-      time: RESPONSE_WAIT_TIME_IN_MS,
-      errors: ["time"],
-    })
-    .catch(() => null);
-
-  return msg?.first() ?? null;
-}
+  return (
+    channel
+      .awaitMessages({
+        filter,
+        max: MAX_RESPONSES,
+        time: RESPONSE_WAIT_TIME_IN_MS,
+        errors: ["time"],
+      })
+      .then((msgs: any) => msgs.first()) ?? null
+  );
+};
 
 /**
  * Embed for the user already being verified
  * @returns The embed
  */
-function alreadyVerifiedEmbed(): EmbedBuilder {
-  const embed = new EmbedBuilder()
+const alreadyVerifiedEmbed = (): EmbedBuilder =>
+  new EmbedBuilder()
     .setAuthor({
       name: "Vitess Verification",
       iconURL: EMBED_IMAGE,
@@ -142,16 +151,13 @@ function alreadyVerifiedEmbed(): EmbedBuilder {
     .setDescription("You are already verified!")
     .setColor(EMBED_NEUTRAL_COLOR);
 
-  return embed;
-}
-
 /**
  * Verification embed to announce the code
  * @param code The code
  * @returns The embed
  */
-function verificationEmbed(code: string): EmbedBuilder {
-  const embed = new EmbedBuilder()
+const verificationEmbed = (code: string): EmbedBuilder =>
+  new EmbedBuilder()
     .setAuthor({
       name: "Vitess Verification",
       iconURL: EMBED_IMAGE,
@@ -163,15 +169,12 @@ function verificationEmbed(code: string): EmbedBuilder {
       { name: "Time Left", value: "10 seconds" }
     );
 
-  return embed;
-}
-
 /**
  * Embed for running out of time
  * @returns The embed
  */
-function timeOutEmbed(): EmbedBuilder {
-  const embed = new EmbedBuilder()
+const timeOutEmbed = (): EmbedBuilder =>
+  new EmbedBuilder()
     .setAuthor({
       name: "Vitess Verification",
       iconURL: EMBED_IMAGE,
@@ -179,15 +182,12 @@ function timeOutEmbed(): EmbedBuilder {
     .setDescription("You ran out of time!")
     .setColor(EMBED_ERROR_COLOR);
 
-  return embed;
-}
-
 /**
  * Embed for entering the wrong code
  * @returns The embed
  */
-function wrongCodeEmbed(): EmbedBuilder {
-  const embed = new EmbedBuilder()
+const wrongCodeEmbed = (): EmbedBuilder =>
+  new EmbedBuilder()
     .setAuthor({
       name: "Vitess Verification",
       iconURL: EMBED_IMAGE,
@@ -195,21 +195,15 @@ function wrongCodeEmbed(): EmbedBuilder {
     .setDescription("You entered the wrong code!")
     .setColor(EMBED_ERROR_COLOR);
 
-  return embed;
-}
-
 /**
  * Embed for successfully verifying
  * @returns The embed
  */
-function successEmbed(): EmbedBuilder {
-  const embed = new EmbedBuilder()
+const successEmbed = (): EmbedBuilder =>
+  new EmbedBuilder()
     .setAuthor({
       name: "Vitess Verification",
       iconURL: EMBED_IMAGE,
     })
     .setDescription("You have been verified!")
     .setColor(EMBED_SUCCESS_COLOR);
-
-  return embed;
-}
