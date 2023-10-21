@@ -6,6 +6,9 @@ Notes:
   => To run redis: docker run -p 6379:6379 -it redis/redis-stack-server:latest
 */
 const REDIS_URL: string = process.env.REDIS_URL || "redis://localhost:6379";
+const REDIS_CLIENT_OPTS = {
+  url: REDIS_URL,
+};
 
 /**
  * Database class for storing the database
@@ -15,9 +18,7 @@ export class Database {
   /**
    * The redis and prisma clients
    */
-  private redisClient = createClient({
-    url: REDIS_URL,
-  });
+  private redisClient = createClient(REDIS_CLIENT_OPTS);
   private prismaClient = new PrismaClient();
 
   /**

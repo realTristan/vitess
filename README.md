@@ -1,22 +1,69 @@
 # Vitess ![Stars](https://img.shields.io/github/stars/realTristan/vitess?color=brightgreen) ![Watchers](https://img.shields.io/github/watchers/realTristan/vitess?label=Watchers)
+
 ![logo](https://github.com/realTristan/vitess/assets/75189508/a74d4664-6b6e-4ba3-b922-976427953ec3)
 
 # Example
+
 <img width="563" alt="Screenshot 2023-10-20 at 9 50 52 PM" src="https://github.com/realTristan/vitess/assets/75189508/70bcc37e-a12d-4f74-a945-84e1725674f2">
 
-# Usage
+# How to install and host
+
+#### Add and update the following .env variables
+
+```env
+DATABASE_URL = "CockroachDB URL"
+REDIS_URL = "redis://localhost:6379"
+DISCORD_TOKEN = "YOUR DISCORD TOKEN"
+```
+
+### Execute the following commands
+
+#### Install dependencies
+
+```bash
+bun install
+```
+
+```bash
+npm install
+```
+
+#### Migrating prisma schema (create a new CockroachDB first)
+
+```bash
+npx prisma migrate dev --name init --preview-feature
+```
+
+#### Run the redis server in a different terminal (using docker)
+
+```bash
+docker run -p 6379:6379 -it redis/redis-stack-server:latest
+```
+
+#### Run the index file (start everything)
+
+```bash
+bun run index.ts
+```
+
+# How to interact with the bot
+
 Invite the bot [here](https://discord.com/api/oauth2/authorize?client_id=1165100334084014150&permissions=8&scope=applications.commands%20bot)
 
 ### Verify with
+
 `/verify`
 
 ### See all verified users
+
 `/verified`
 
 ### Unverify yourself
+
 `/unverify`
 
 # License
+
 MIT License
 
 Copyright (c) 2023 Tristan Simpson
