@@ -1,0 +1,20 @@
+{
+  "name": "vitess",
+  "module": "index.ts",
+  "type": "module",
+  "devDependencies": {
+    "bun-types": "latest"
+  },
+  "scripts": {
+    "redis": "docker run -p 6379:6379 -it redis/redis-stack-server:latest",
+    "prismainit": "npx prisma migrate dev --name init --preview-feature"
+  },
+  "peerDependencies": {
+    "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "@prisma/client": "^5.4.2",
+    "discord.js": "^14.13.0",
+    "redis": "^4.6.10"
+  }
+}

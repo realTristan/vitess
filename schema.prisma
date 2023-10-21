@@ -1,0 +1,17 @@
+datasource db {
+    provider = "cockroachdb"
+    url      = env("DATABASE_URL")
+}
+
+generator client {
+    provider = "prisma-client-js"
+}
+
+model User {
+    id         BigInt   @id @default(autoincrement())
+    discordId  String   @unique
+    verifiedAt DateTime @default(now())
+}
+
+// Command for migration
+// npx prisma migrate dev --name init --preview-feature
