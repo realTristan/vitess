@@ -1,7 +1,7 @@
 # Vitess
 ![logo](https://github.com/realTristan/vitess/assets/75189508/a74d4664-6b6e-4ba3-b922-976427953ec3)
 
-## How to use Vitess
+# Usage
 Invite the bot [here](https://discord.com/api/oauth2/authorize?client_id=1165100334084014150&permissions=8&scope=applications.commands%20bot)
 
 ### Verify with
