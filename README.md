@@ -19,10 +19,11 @@ DISCORD_TOKEN = "YOUR DISCORD TOKEN"
 ### Execute the following commands
 
 ```bash
-make install
-make migrate
-make redis
-make start
+bun install
+bun prisma
+bun migrate
+bun redis
+bun start
 ```
 
 # How to interact with the bot

@@ -6,8 +6,10 @@
     "bun-types": "latest"
   },
   "scripts": {
+    "start": "bun run src/index.ts --watch",
+    "prisma": "npx prisma generate",
     "redis": "docker run -p 6379:6379 -it redis/redis-stack-server:latest",
-    "prismainit": "npx prisma migrate dev --name init --preview-feature"
+    "migrate": "npx prisma migrate dev --name init --preview-feature"
   },
   "peerDependencies": {
     "typescript": "^5.0.0"
