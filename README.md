@@ -1,4 +1,4 @@
-# Vitess
+# Vitess ![Stars](https://img.shields.io/github/stars/realTristan/vitess?color=brightgreen) ![Watchers](https://img.shields.io/github/watchers/realTristan/vitess?label=Watchers)
 ![logo](https://github.com/realTristan/vitess/assets/75189508/a74d4664-6b6e-4ba3-b922-976427953ec3)
 
 # Usage
