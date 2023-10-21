@@ -1,6 +1,9 @@
 # Vitess ![Stars](https://img.shields.io/github/stars/realTristan/vitess?color=brightgreen) ![Watchers](https://img.shields.io/github/watchers/realTristan/vitess?label=Watchers)
 ![logo](https://github.com/realTristan/vitess/assets/75189508/a74d4664-6b6e-4ba3-b922-976427953ec3)
 
+# Example
+<img width="563" alt="Screenshot 2023-10-20 at 9 50 52 PM" src="https://github.com/realTristan/vitess/assets/75189508/70bcc37e-a12d-4f74-a945-84e1725674f2">
+
 # Usage
 Invite the bot [here](https://discord.com/api/oauth2/authorize?client_id=1165100334084014150&permissions=8&scope=applications.commands%20bot)
 
